@@ -1,9 +1,8 @@
 'use client';
 
-import { Suspense, useRef, useState } from 'react';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Box, Sphere, Torus, Plane, Html, OrbitControls } from '@react-three/drei';
-import { TextureLoader } from 'three';
 import type { Group, Mesh } from 'three';
 
 // Closer + lower than the original framing, with a wider FOV — pulls the fly toward
@@ -355,20 +354,6 @@ function CityBackdrop() {
   );
 }
 
-// Official Avalanche logo (public/avalanche-logo.svg — downloaded unmodified from
-// Wikimedia Commons, CC BY-SA 4.0, credited in README) as a small flat badge lying on
-// the desk — FlyFi genuinely trades on Avalanche C-Chain via LFJ, so this identifies
-// the real chain, not decorative branding for its own sake.
-function AvaxBadge() {
-  const texture = useLoader(TextureLoader, '/avalanche-logo.svg');
-  return (
-    <mesh position={[-0.95, DESK_TOP_Y + 0.002, 0.55]} rotation={[-Math.PI / 2, 0, 0]}>
-      <circleGeometry args={[0.11, 32]} />
-      <meshStandardMaterial map={texture} transparent roughness={0.4} />
-    </mesh>
-  );
-}
-
 function Desk({
   statusColor, tradeStatus, candles, price, paused,
 }: { statusColor: string; tradeStatus: TradeStatus; candles: Candle[]; price: number; paused: boolean }) {
@@ -407,7 +392,6 @@ function Desk({
       </Box>
 
       <SpeakerProp />
-      <AvaxBadge />
       <LowPolyFly tradeStatus={tradeStatus} paused={paused} />
     </group>
   );
@@ -440,9 +424,7 @@ export default function FlyDeskScene({
         <pointLight position={[-2, 1.6, -1]} intensity={0.8} color="#06b6d4" />
         <directionalLight position={[3, 4, 2]} intensity={0.9} castShadow />
         <SweepingCamera paused={paused} />
-        <Suspense fallback={null}>
-          <Desk statusColor={statusColor} tradeStatus={tradeStatus} candles={candles} price={price} paused={paused} />
-        </Suspense>
+        <Desk statusColor={statusColor} tradeStatus={tradeStatus} candles={candles} price={price} paused={paused} />
       </Canvas>
     </div>
   );
