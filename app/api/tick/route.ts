@@ -19,9 +19,9 @@ const AVAX_DECIMALS = 18;
 const SAFETY_MARGIN = 0.99;
 const MIN_TRADE_USD = 0.05;
 
-// Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` automatically once
-// CRON_SECRET is set as an env var on the project — this same header/secret doubles
-// as the auth for a manual force-tick call (e.g. for the demo video).
+// Triggered by an external cron tool (not Vercel Cron — see vercel.json), which must
+// send `Authorization: Bearer ${CRON_SECRET}`. Same header/secret doubles as the auth
+// for a manual force-tick call (e.g. for the demo video).
 function isAuthorized(req: Request): boolean {
   return req.headers.get('authorization') === `Bearer ${env.CRON_SECRET}`;
 }
