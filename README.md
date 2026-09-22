@@ -3,8 +3,7 @@
 An autonomous fly with a wallet. It trades AVAX/USDC on Avalanche mainnet via a
 tabular Q-learning agent, executes gaslessly through SmoothSend, and runs the real
 166,700-neuron *Drosophila* connectome alongside as a live (display-only) comparison
-signal — built for the [Team1 India Speedrun: Build Anything on Avalanche](https://build.avax.network)
-hackathon.
+signal.
 
 ## What's real vs. narrative
 
