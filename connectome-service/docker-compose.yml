@@ -1,0 +1,9 @@
+services:
+  connectome:
+    build: .
+    container_name: flyfi-connectome
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    environment:
+      - CONNECTOME_SECRET=${CONNECTOME_SECRET}

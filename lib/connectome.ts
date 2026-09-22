@@ -22,7 +22,10 @@ export async function getConnectomeRead(momentumBucket: MomentumBucket): Promise
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    // 20s: measured a real 14.37s response from the actual hosted service on a cold
+    // start (shared VM, other services running) — 5s was cutting off real, valid
+    // responses, not just genuinely-dead ones.
+    const timeout = setTimeout(() => controller.abort(), 20_000);
     const res = await fetch(`${url.replace(/\/$/, '')}/decide`, {
       method: 'POST',
       headers: {
