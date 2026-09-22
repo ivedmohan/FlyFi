@@ -1,0 +1,4 @@
+flybrain
+fastapi
+uvicorn[standard]
+pydantic

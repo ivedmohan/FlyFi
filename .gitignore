@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env
+.env.local
+next-env.d.ts
+.vercel
+
+# vendored reference clone — narrative reference only, not our code
+reference/
+tsconfig.tsbuildinfo
