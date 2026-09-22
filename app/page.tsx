@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import QRCode from 'qrcode';
 
 const FlyDeskScene = dynamic(() => import('../components/FlyDeskScene'), {
@@ -9,10 +10,13 @@ const FlyDeskScene = dynamic(() => import('../components/FlyDeskScene'), {
   loading: () => <div className="flex h-48 items-center justify-center text-[11px] text-gray-600">loading scene…</div>,
 });
 
+type DecisionSource = 'connectome' | 'qtable' | null;
+
 interface Tick {
   timestamp: string;
   action: string;
   reward: number;
+  decisionSource: DecisionSource;
 }
 
 interface Candle {
@@ -31,9 +35,9 @@ interface FlyState {
   position: 'AVAX' | 'USDC';
   lastAction: string | null;
   lastReward: number;
+  lastDecisionSource: DecisionSource;
   momentumBucket: number;
   portfolioValueUsd: number;
-  vaultSweptUsd: number;
   realSwapCount: number;
   tickCount: number;
   recentPnl: number;
@@ -146,14 +150,22 @@ export default function Home() {
           <h1 className="font-pixel text-lg leading-none text-gray-100">
             🪰 FLY<span className="text-accent-cyan">FI</span>
           </h1>
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-gray-400">
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                state.dataSource.wallet === 'live' ? 'bg-dopamine' : 'bg-gray-500'
-              } animate-pulse-slow`}
-            />
-            FLY-01 · {CONNECTOME_NEURON_COUNT.toLocaleString()} NEURONS ·{' '}
-            {state.dataSource.wallet === 'live' ? 'ONLINE' : 'MOCK'}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/how-it-works"
+              className="text-[11px] text-gray-500 underline decoration-white/20 underline-offset-2 transition hover:text-accent-cyan"
+            >
+              how it works
+            </Link>
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-gray-400">
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  state.dataSource.wallet === 'live' ? 'bg-dopamine' : 'bg-gray-500'
+                } animate-pulse-slow`}
+              />
+              FLY-01 · {CONNECTOME_NEURON_COUNT.toLocaleString()} NEURONS ·{' '}
+              {state.dataSource.wallet === 'live' ? 'ONLINE' : 'MOCK'}
+            </div>
           </div>
         </header>
 
@@ -181,10 +193,10 @@ export default function Home() {
             momentumBucket={state.momentumBucket}
             acting={state.lastAction != null && state.lastAction !== 'HOLD'}
             connectome={state.connectome}
+            decisionSource={state.lastDecisionSource}
           />
           <div className="flex flex-col gap-4">
-            <VaultWidget state={state} />
-            {!state.starving && <AddressCard address={state.address} />}
+            <DonateCard address={state.address} starving={state.starving} realSwapCount={state.realSwapCount} />
           </div>
         </div>
 
@@ -205,9 +217,27 @@ function FlyExeWindow({ state, mood }: { state: FlyState; mood: Mood }) {
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: moodColor(mood) }} />
           FLY.EXE
         </p>
-        <span className="rounded border border-white/10 px-2 py-0.5 text-[10px] text-gray-500">
-          {state.dataSource.decisions === 'live' ? 'LIVE' : 'SIM'}
-        </span>
+        <div className="flex items-center gap-2">
+          {state.lastDecisionSource && (
+            <span
+              className={`rounded border px-2 py-0.5 text-[10px] ${
+                state.lastDecisionSource === 'connectome'
+                  ? 'border-accent-purple/40 text-accent-purple'
+                  : 'border-accent-cyan/40 text-accent-cyan'
+              }`}
+              title={
+                state.lastDecisionSource === 'connectome'
+                  ? "last trade driven by the fly's real connectome"
+                  : "last trade driven by the Q-table (vetoed or fell back from the connectome)"
+              }
+            >
+              {state.lastDecisionSource === 'connectome' ? '🧠 brain drove it' : '📊 table drove it'}
+            </span>
+          )}
+          <span className="rounded border border-white/10 px-2 py-0.5 text-[10px] text-gray-500">
+            {state.dataSource.decisions === 'live' ? 'LIVE' : 'SIM'}
+          </span>
+        </div>
       </div>
 
       <div className="relative">
@@ -286,6 +316,11 @@ function StashPanel({ state }: { state: FlyState }) {
               <span className="text-gray-500">{new Date(h.timestamp).toLocaleTimeString()}</span>
               <span className="text-gray-300">
                 {actionIcon(h.action)} {h.action}
+              </span>
+              <span
+                title={h.decisionSource === 'connectome' ? 'driven by the connectome' : h.decisionSource === 'qtable' ? 'driven by the Q-table' : undefined}
+              >
+                {h.decisionSource === 'connectome' ? '🧠' : h.decisionSource === 'qtable' ? '📊' : ''}
               </span>
               <span className={`font-medium ${h.reward >= 0 ? 'text-dopamine' : 'text-shock'}`}>
                 {h.reward > 0 ? '+' : ''}
@@ -366,10 +401,11 @@ const VISUAL_PURPLE = '#a78bfa';
 const MOTOR_GREEN = '#22c55e';
 
 function BrainVisual({
-  mood, reward, momentumBucket, acting, connectome,
+  mood, reward, momentumBucket, acting, connectome, decisionSource,
 }: {
   mood: Mood; reward: number; momentumBucket: number; acting: boolean;
   connectome: { action: string | null; diffHz: number | null; gateRate: number | null } | null;
+  decisionSource: DecisionSource;
 }) {
   const ambient = moodColor(mood);
   return (
@@ -434,7 +470,12 @@ function BrainVisual({
             </p>
             <p className="text-[9px] text-gray-600">
               Δ{connectome.diffHz?.toFixed(2)}Hz · gate {((connectome.gateRate ?? 0) * 100).toFixed(0)}%
-              — display only, noisy signal (166,700 real neurons, not a vote)
+              — {CONNECTOME_NEURON_COUNT.toLocaleString()} real neurons, still noisy
+            </p>
+            <p className="mt-1 text-[9px]" style={{ color: decisionSource === 'connectome' ? MOTOR_GREEN : '#64748b' }}>
+              {decisionSource === 'connectome'
+                ? '✓ drove the last trade'
+                : 'overruled by the Q-table last trade (learned a better move here)'}
             </p>
           </>
         ) : (
@@ -445,26 +486,50 @@ function BrainVisual({
   );
 }
 
-function VaultWidget({ state }: { state: FlyState }) {
-  return (
-    <div className="glass flex-1 rounded-xl border border-white/10 p-4 shadow-xl">
-      <p className="panel-label text-accent-cyan">SMOOTHSEND VAULT</p>
-      <p className="mt-2 text-2xl font-bold text-gray-100">${state.vaultSweptUsd.toFixed(2)}</p>
-      <p className="mt-1 text-[11px] text-gray-500">
-        USDC swept gaslessly · {state.realSwapCount} real swap{state.realSwapCount === 1 ? '' : 's'}
-      </p>
-    </div>
-  );
-}
+function DonateCard({
+  address, starving, realSwapCount,
+}: {
+  address: string; starving: boolean; realSwapCount: number;
+}) {
+  const [copied, setCopied] = useState(false);
 
-function AddressCard({ address }: { address: string }) {
+  async function copyAddress() {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard API unavailable — fail silently, address is still select-all-able
+    }
+  }
+
   return (
-    <div className="glass flex-1 rounded-xl border border-white/10 p-4 text-center shadow-xl">
-      <p className="panel-label justify-center text-gray-500">WALLET</p>
-      <div className="mt-3 flex justify-center">
+    <div
+      className={`glass flex flex-1 flex-col items-center rounded-xl border p-4 text-center shadow-xl ${
+        starving ? 'border-shock/50' : 'border-white/10'
+      }`}
+    >
+      <p className={`panel-label justify-center ${starving ? 'text-shock' : 'text-accent-cyan'}`}>
+        {starving ? 'FEED THE FLY' : 'DONATE TO THE FLY'}
+      </p>
+      <div className="mt-3">
         <AddressQr value={address} />
       </div>
-      <p className="mt-2 text-[10px] text-gray-400">{shortAddr(address)}</p>
+      <button
+        onClick={copyAddress}
+        className="mt-2 flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[10px] text-gray-400 transition hover:bg-white/5 hover:text-gray-200"
+        title="copy full address"
+      >
+        <span className="select-all">{shortAddr(address)}</span>
+        <span className={copied ? 'text-dopamine' : 'text-gray-600'}>{copied ? '✓ copied' : '⧉ copy'}</span>
+      </button>
+      <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
+        This is the fly&rsquo;s own smart-account address. Send AVAX or USDC to it directly &mdash;
+        it goes straight into the fly&rsquo;s tradeable balance, no separate vault.
+      </p>
+      <p className="mt-2 text-[10px] text-gray-600">
+        {realSwapCount} real swap{realSwapCount === 1 ? '' : 's'} so far
+      </p>
     </div>
   );
 }

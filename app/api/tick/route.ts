@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server';
 import { parseUnits } from 'viem';
 import { getAvaxPriceUsd, buildSwapUsdcToAvaxCalls, buildSwapAvaxToUsdcCalls } from '../../../lib/dex';
 import { getUsdcBalance, getAvaxBalance, submitSponsoredCalls, usdcAddress, usdcDecimals } from '../../../lib/wallet';
-import { chooseAction, updateQ, decayEpsilon, bucketMomentum, stateKey, type State, type Position } from '../../../lib/rl';
+import { decideAction, updateQ, decayEpsilon, bucketMomentum, stateKey, type State, type Position } from '../../../lib/rl';
 import { loadQTable, saveQTableEntry, recordTick, getRecentTicks, getTickCount } from '../../../lib/db';
 import { getConnectomeRead } from '../../../lib/connectome';
 import { env } from '../../../lib/env';
+
+// The connectome read now gates the actual trade decision (not just a display field),
+// and has measured as slow as ~14s on its shared host — well past Vercel's default 10s
+// Hobby-plan function limit. Needs a Pro plan (or equivalent) to actually take effect;
+// documented here so the reason isn't a mystery if a real deploy times out.
+export const maxDuration = 60;
 
 const AVAX_DECIMALS = 18;
 // Leave a little headroom under the wallet balance / per-tx cap against rounding and
@@ -58,11 +64,17 @@ export async function POST(req: Request) {
   }
 
   const epsilon = decayEpsilon(tickCount);
-  const chosenAction = chooseAction(table, state, epsilon);
 
-  // Real connectome's display-only read on the same momentum — never influences
-  // `chosenAction` above or anything downstream that touches real funds.
+  // The fly's real connectome (connectome-service/) proposes this tick's action from
+  // the same momentum input. It drives the trade unless the Q-table has learned, from
+  // real portfolio outcomes, that some other valid action has scored meaningfully
+  // better in this exact state — see decideAction()'s doc comment in lib/rl.ts for the
+  // full veto rule. Falls back to the Q-table's own epsilon-greedy pick whenever the
+  // connectome is unavailable.
   const connectomeRead = await getConnectomeRead(state.momentum);
+  const { action: chosenAction, source: decisionSource } = decideAction(
+    table, state, epsilon, connectomeRead?.action ?? null,
+  );
 
   // The size cap below can reject a trade as too small to be worth the fees. Per the
   // rule "a risk guard may reject an order, it must never choose a replacement trade"
@@ -116,10 +128,11 @@ export async function POST(req: Request) {
     connectomeAction: connectomeRead?.action ?? null,
     connectomeDiffHz: connectomeRead?.meanDiffHz ?? null,
     connectomeGateRate: connectomeRead?.gateRate ?? null,
+    decisionSource,
   });
 
   return NextResponse.json({
-    state, chosenAction, executedAction, reward, price, portfolioValueUsd, txHash, simulated, epsilon,
+    state, chosenAction, executedAction, reward, price, portfolioValueUsd, txHash, simulated, epsilon, decisionSource,
     connectomeRead,
   });
 }

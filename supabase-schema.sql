@@ -18,7 +18,10 @@ create table if not exists ticks (
   -- Never influences `action` above.
   connectome_action text check (connectome_action in ('SWAP_TO_AVAX', 'SWAP_TO_USDC', 'HOLD')),
   connectome_diff_hz double precision,
-  connectome_gate_rate double precision
+  connectome_gate_rate double precision,
+  -- Which of the two ever drove this tick's `action` — the connectome (default driver)
+  -- or the Q-table (veto/fallback). See decideAction() in lib/rl.ts.
+  decision_source text check (decision_source in ('connectome', 'qtable'))
 );
 
 create index if not exists ticks_created_at_idx on ticks (created_at desc);

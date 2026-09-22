@@ -30,7 +30,7 @@ export async function GET() {
     // Everything here is real — wallet/portfolio from live chain reads, decisions from
     // lib/db.ts (real Supabase once configured, an in-memory dev fallback until then),
     // candles from CoinGecko's public OHLC endpoint. "no ticks yet" just means
-    // /api/tick hasn't run. vaultSweptUsd is honestly 0 — vault-sweep isn't built yet.
+    // /api/tick hasn't run.
     dataSource: { wallet: 'live', decisions: 'live' },
     address,
     balances: { usdc: usdc.formatted, avax: avax.formatted },
@@ -38,15 +38,16 @@ export async function GET() {
     position,
     portfolioValueUsd,
     recentPnl,
-    vaultSweptUsd: 0,
     realSwapCount,
     tickCount,
     starving: portfolioValueUsd < env.STARVING_THRESHOLD_USD,
     lastAction: lastTick?.action ?? null,
     lastReward: lastTick?.reward ?? 0,
+    lastDecisionSource: lastTick?.decision_source ?? null,
     momentumBucket: lastTick?.momentum_bucket ?? 0,
-    // Real connectome's display-only read from the latest tick — null if that service
-    // isn't configured/reachable, or no ticks have run yet.
+    // Real connectome read from the latest tick — null if that service isn't
+    // configured/reachable, or no ticks have run yet. Whether it actually drove that
+    // tick's action (vs. being overridden by the Q-table) is `lastDecisionSource` above.
     connectome: lastTick
       ? {
           action: lastTick.connectome_action,
@@ -58,6 +59,7 @@ export async function GET() {
       timestamp: t.created_at,
       action: t.action,
       reward: t.reward,
+      decisionSource: t.decision_source,
     })),
     candles,
   });

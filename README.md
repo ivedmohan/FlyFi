@@ -1,29 +1,35 @@
 # FlyFi
 
-An autonomous fly with a wallet. It trades AVAX/USDC on Avalanche mainnet via a
-tabular Q-learning agent, executes gaslessly through SmoothSend, and runs the real
-166,700-neuron *Drosophila* connectome alongside as a live (display-only) comparison
-signal.
+An autonomous fly with a wallet. Every tick, the real 166,700-neuron *Drosophila*
+connectome proposes a trade; a small tabular Q-learner can veto it once it's learned,
+from real portfolio outcomes, that some other action clearly works better in that exact
+situation. Whichever wins executes gaslessly through SmoothSend on Avalanche mainnet.
 
 ## What's real vs. narrative
 
 - **Real**: the wallet, the DEX swaps (LFJ V2.2 on Avalanche mainnet), the gasless
-  execution (SmoothSend), the Q-learning decision loop, the AVAX/USD price data, and
-  the connectome service (an actual instance of the real MaleCNS connectome, not a
-  simulation of one).
+  execution (SmoothSend), the Q-learning veto/learning loop, the AVAX/USD price data,
+  and the connectome service (an actual instance of the real MaleCNS connectome, not a
+  simulation of one) — including its role in actually proposing trades, not just
+  displaying an opinion.
 - **Decorative/narrative**: the 3D desk scene and brain-map visualization are original
   artwork illustrating the real data, not literal renderings of anything.
 - The connectome's output is shown honestly as a noisy signal (real numbers: firing
-  rate difference, gate confidence) — never dressed up as a confident "vote," and it
-  never drives a real trade. The Q-learner does that.
+  rate difference, gate confidence), and it *is* what drives most trades by default —
+  see `decideAction()` in `lib/rl.ts` for the exact veto rule. This is a deliberate
+  choice for a project more interested in running a genuine biological simulation live
+  than in a validated trading edge: fly.ai's own published research (and our own
+  multi-trial testing) found this general approach doesn't reliably beat a non-learning
+  baseline. Nothing here is investment advice.
 
 ## Tech stack
 
 - **App**: Next.js 15 (App Router), TypeScript, Tailwind
 - **Chain**: Avalanche C-Chain mainnet, `@smoothsend/sdk/avax` for gasless ERC-4337
   execution, [LFJ (Trader Joe) V2.2](https://developers.lfj.gg) for swaps
-- **Decision loop**: hand-rolled tabular Q-learning (`lib/rl.ts`) — deliberately not a
-  black-box model, so the whole decision rule fits in one small, readable file
+- **Decision loop**: the connectome service proposes; hand-rolled tabular Q-learning
+  (`lib/rl.ts`, `decideAction()`) can veto it — deliberately not a black-box model, so
+  the whole veto rule fits in one small, readable file
 - **Data**: Supabase (Postgres) for tick history and the learned Q-table; CoinGecko's
   public OHLC endpoint for chart candles
 - **3D**: `@react-three/fiber` + drei, an original procedural low-poly scene

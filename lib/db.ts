@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { QTable, Action, Position } from './rl';
+import type { QTable, Action, Position, DecisionSource } from './rl';
 
 export interface TickRecord {
   momentumBucket: number;
@@ -12,11 +12,14 @@ export interface TickRecord {
   avaxBalance: number;
   txHash?: string;
   simulated: boolean;
-  // Real connectome's display-only read on the same momentum input — null when the
-  // service isn't configured/reachable. Never influences `action` above.
+  // Real connectome's read on the same momentum input — null when the service isn't
+  // configured/reachable. `decisionSource` says whether this tick's `action` actually
+  // came from the connectome or was a Q-table override/fallback — see decideAction()
+  // in lib/rl.ts.
   connectomeAction?: Action | null;
   connectomeDiffHz?: number | null;
   connectomeGateRate?: number | null;
+  decisionSource: DecisionSource;
 }
 
 interface TickRow {
@@ -34,6 +37,7 @@ interface TickRow {
   connectome_action: Action | null;
   connectome_diff_hz: number | null;
   connectome_gate_rate: number | null;
+  decision_source: DecisionSource | null;
 }
 
 const hasSupabase = !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -89,6 +93,7 @@ export async function recordTick(t: TickRecord): Promise<void> {
       connectome_action: t.connectomeAction ?? null,
       connectome_diff_hz: t.connectomeDiffHz ?? null,
       connectome_gate_rate: t.connectomeGateRate ?? null,
+      decision_source: t.decisionSource,
     });
     memTicks = memTicks.slice(0, 500);
     return;
@@ -107,6 +112,7 @@ export async function recordTick(t: TickRecord): Promise<void> {
     connectome_action: t.connectomeAction ?? null,
     connectome_diff_hz: t.connectomeDiffHz ?? null,
     connectome_gate_rate: t.connectomeGateRate ?? null,
+    decision_source: t.decisionSource,
   });
   if (error) throw new Error(`[flyfi/db] recordTick failed: ${error.message}`);
 }

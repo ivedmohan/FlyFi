@@ -31,7 +31,7 @@ function qValue(table: QTable, key: string, action: Action): number {
 }
 
 /** Can't swap into the position already held — that's just HOLD with extra fees. */
-function validActions(position: Position): Action[] {
+export function validActions(position: Position): Action[] {
   return ACTIONS.filter((a) => {
     if (a === 'SWAP_TO_AVAX') return position !== 'AVAX';
     if (a === 'SWAP_TO_USDC') return position !== 'USDC';
@@ -82,4 +82,47 @@ export function decayEpsilon(
   const min = opts?.min ?? 0.05;
   const decay = opts?.decay ?? 0.97;
   return Math.max(min, start * Math.pow(decay, tickCount));
+}
+
+export type DecisionSource = 'connectome' | 'qtable';
+
+// How much better the Q-table's best alternative has to look, in learned Q-value terms,
+// before it's allowed to override the connectome's proposed action. Not empirically
+// tuned — a deliberately simple, honestly-documented judgment call (this is a fun
+// project, not a calibrated risk model): small enough that the connectome actually gets
+// to drive most of the time, large enough that a state the Q-table has real, repeated,
+// bad experience with won't get overridden by a single noisy brain reading.
+const VETO_MARGIN = 0.05;
+
+/**
+ * The fly's real connectome (see connectome-service/) proposes an action from the same
+ * momentum input the Q-learner sees. It drives the trade UNLESS the Q-table has learned
+ * — from real portfolio outcomes, via updateQ() — that some other valid action has
+ * scored meaningfully better in this exact state. That's the whole "brain trades, table
+ * is the safety net" design: the connectome is the default driver, not a suggestion the
+ * table takes or leaves, but it can be overruled by the table's own track record.
+ *
+ * Falls back to the Q-table's own (still epsilon-greedy, still exploring/learning) pick
+ * whenever the connectome is unavailable (null — service down/unreachable/timed out) or
+ * proposes an action that isn't valid from the current position (e.g. it suggests
+ * SWAP_TO_AVAX while already holding AVAX).
+ */
+export function decideAction(
+  table: QTable, state: State, epsilon: number,
+  connectomeAction: Action | null, rand: () => number = Math.random,
+): { action: Action; source: DecisionSource } {
+  const valid = validActions(state.position);
+  const qSuggestion = chooseAction(table, state, epsilon, rand);
+
+  if (connectomeAction && valid.includes(connectomeAction)) {
+    const key = stateKey(state);
+    const connQ = qValue(table, key, connectomeAction);
+    const alternatives = valid.filter((a) => a !== connectomeAction);
+    const bestAltQ = alternatives.length > 0 ? Math.max(...alternatives.map((a) => qValue(table, key, a))) : -Infinity;
+    const vetoed = bestAltQ - connQ > VETO_MARGIN;
+    if (!vetoed) {
+      return { action: connectomeAction, source: 'connectome' };
+    }
+  }
+  return { action: qSuggestion, source: 'qtable' };
 }
