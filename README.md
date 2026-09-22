@@ -73,8 +73,3 @@ npm run dev
 
 `connectome-service/` is a separate Python service (`pip install -r requirements.txt`,
 `uvicorn app:app`) — see its own `README.md`.
-
-## AI tools used
-
-Built with [Claude Code](https://claude.com/claude-code) throughout — architecture,
-implementation, the connectome integration research and adaptation, and this README.
