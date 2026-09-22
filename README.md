@@ -68,6 +68,10 @@ it. Credited here, not just in code comments:
   [Trader Joe's own contract source](https://github.com/traderjoe-xyz/joe-v2) and
   Snowtrace before being wired to a real wallet.
 - **[CoinGecko](https://www.coingecko.com)** — public OHLC price data for the chart.
+- **[Avalanche logo](https://commons.wikimedia.org/wiki/File:Avalanche_Blockchain_Logo.svg)**
+  (`public/avalanche-logo.svg`) — used unmodified, under
+  [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), as a small badge in
+  the 3D desk scene identifying the real chain FlyFi trades on.
 
 ## Local development
 
