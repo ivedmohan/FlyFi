@@ -10,13 +10,14 @@ const FlyDeskScene = dynamic(() => import('../components/FlyDeskScene'), {
   loading: () => <div className="flex h-48 items-center justify-center text-[11px] text-gray-600">loading scene…</div>,
 });
 
-type DecisionSource = 'connectome' | 'qtable' | null;
+type DecisionSource = 'connectome' | 'qtable' | 'manual' | null;
 
 interface Tick {
   timestamp: string;
   action: string;
   reward: number;
   decisionSource: DecisionSource;
+  txHash: string | null;
 }
 
 interface Candle {
@@ -81,6 +82,20 @@ function actionIcon(action: string) {
   if (action === 'SWAP_TO_AVAX') return '📈';
   if (action === 'SWAP_TO_USDC') return '📉';
   return '⏸️';
+}
+
+function decisionSourceIcon(source: DecisionSource) {
+  if (source === 'connectome') return '🧠';
+  if (source === 'qtable') return '📊';
+  if (source === 'manual') return '🔧';
+  return '';
+}
+
+function decisionSourceLabel(source: DecisionSource): string | undefined {
+  if (source === 'connectome') return 'driven by the connectome';
+  if (source === 'qtable') return 'driven by the Q-table';
+  if (source === 'manual') return 'manually triggered — bypassed the decision loop (e.g. scripts/smoke-swap.ts)';
+  return undefined;
 }
 
 function shortAddr(a: string) {
@@ -223,15 +238,15 @@ function FlyExeWindow({ state, mood }: { state: FlyState; mood: Mood }) {
               className={`rounded border px-2 py-0.5 text-[10px] ${
                 state.lastDecisionSource === 'connectome'
                   ? 'border-accent-purple/40 text-accent-purple'
-                  : 'border-accent-cyan/40 text-accent-cyan'
+                  : state.lastDecisionSource === 'qtable'
+                    ? 'border-accent-cyan/40 text-accent-cyan'
+                    : 'border-white/20 text-gray-400'
               }`}
-              title={
-                state.lastDecisionSource === 'connectome'
-                  ? "last trade driven by the fly's real connectome"
-                  : "last trade driven by the Q-table (vetoed or fell back from the connectome)"
-              }
+              title={decisionSourceLabel(state.lastDecisionSource)}
             >
-              {state.lastDecisionSource === 'connectome' ? '🧠 brain drove it' : '📊 table drove it'}
+              {state.lastDecisionSource === 'connectome' && '🧠 brain drove it'}
+              {state.lastDecisionSource === 'qtable' && '📊 table drove it'}
+              {state.lastDecisionSource === 'manual' && '🔧 manually triggered'}
             </span>
           )}
           <span className="rounded border border-white/10 px-2 py-0.5 text-[10px] text-gray-500">
@@ -317,15 +332,24 @@ function StashPanel({ state }: { state: FlyState }) {
               <span className="text-gray-300">
                 {actionIcon(h.action)} {h.action}
               </span>
-              <span
-                title={h.decisionSource === 'connectome' ? 'driven by the connectome' : h.decisionSource === 'qtable' ? 'driven by the Q-table' : undefined}
-              >
-                {h.decisionSource === 'connectome' ? '🧠' : h.decisionSource === 'qtable' ? '📊' : ''}
-              </span>
+              <span title={decisionSourceLabel(h.decisionSource)}>{decisionSourceIcon(h.decisionSource)}</span>
               <span className={`font-medium ${h.reward >= 0 ? 'text-dopamine' : 'text-shock'}`}>
                 {h.reward > 0 ? '+' : ''}
                 {h.reward.toFixed(2)}
               </span>
+              {h.txHash ? (
+                <a
+                  href={`https://snowtrace.io/tx/${h.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-500 hover:text-accent-cyan"
+                  title="view on Snowtrace"
+                >
+                  ↗
+                </a>
+              ) : (
+                <span className="w-[1ch]" />
+              )}
             </li>
           ))}
         </ul>
@@ -473,9 +497,9 @@ function BrainVisual({
               — {CONNECTOME_NEURON_COUNT.toLocaleString()} real neurons, still noisy
             </p>
             <p className="mt-1 text-[9px]" style={{ color: decisionSource === 'connectome' ? MOTOR_GREEN : '#64748b' }}>
-              {decisionSource === 'connectome'
-                ? '✓ drove the last trade'
-                : 'overruled by the Q-table last trade (learned a better move here)'}
+              {decisionSource === 'connectome' && '✓ drove the last trade'}
+              {decisionSource === 'qtable' && 'overruled by the Q-table last trade (learned a better move here)'}
+              {decisionSource === 'manual' && '🔧 last trade was manually triggered, bypassing this loop entirely'}
             </p>
           </>
         ) : (

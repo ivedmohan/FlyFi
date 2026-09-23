@@ -84,7 +84,11 @@ export function decayEpsilon(
   return Math.max(min, start * Math.pow(decay, tickCount));
 }
 
-export type DecisionSource = 'connectome' | 'qtable';
+// 'manual' is never returned by decideAction() below — it's for a trade triggered
+// directly (e.g. scripts/smoke-swap.ts, bypassing /api/tick entirely) that recordTick()
+// still needs to label honestly, since neither the connectome nor the Q-table actually
+// chose it.
+export type DecisionSource = 'connectome' | 'qtable' | 'manual';
 
 // How much better the Q-table's best alternative has to look, in learned Q-value terms,
 // before it's allowed to override the connectome's proposed action. Not empirically

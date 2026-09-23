@@ -21,7 +21,7 @@ create table if not exists ticks (
   connectome_gate_rate double precision,
   -- Which of the two ever drove this tick's `action` — the connectome (default driver)
   -- or the Q-table (veto/fallback). See decideAction() in lib/rl.ts.
-  decision_source text check (decision_source in ('connectome', 'qtable'))
+  decision_source text check (decision_source in ('connectome', 'qtable', 'manual'))
 );
 
 create index if not exists ticks_created_at_idx on ticks (created_at desc);

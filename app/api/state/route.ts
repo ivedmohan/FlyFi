@@ -60,6 +60,7 @@ export async function GET() {
       action: t.action,
       reward: t.reward,
       decisionSource: t.decision_source,
+      txHash: t.tx_hash,
     })),
     candles,
   });
