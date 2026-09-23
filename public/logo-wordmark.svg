@@ -1,0 +1,21 @@
+<svg width="640" height="160" viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="160" rx="0" fill="none"/>
+
+  <!-- mark, scaled down and left-aligned -->
+  <g transform="translate(8 8) scale(0.28)">
+    <rect width="512" height="512" rx="96" fill="#05070a"/>
+    <ellipse cx="150" cy="270" rx="130" ry="58" fill="#e2e8f0" opacity="0.22" transform="rotate(-18 150 270)"/>
+    <ellipse cx="362" cy="270" rx="130" ry="58" fill="#e2e8f0" opacity="0.22" transform="rotate(18 362 270)"/>
+    <path d="M256 96 L232 168 H280 Z" fill="#06b6d4"/>
+    <circle cx="256" cy="288" r="146" fill="#1c1c22"/>
+    <circle cx="184" cy="232" r="74" fill="#c0392b"/>
+    <circle cx="328" cy="232" r="74" fill="#c0392b"/>
+    <circle cx="168" cy="211" r="21" fill="#fca5a5"/>
+    <circle cx="312" cy="211" r="21" fill="#fca5a5"/>
+    <path d="M186 392 L146 440 M256 402 L256 452 M326 392 L366 440"
+      stroke="#1c1c22" stroke-width="14" stroke-linecap="round"/>
+  </g>
+
+  <text x="168" y="102" font-family="ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace"
+    font-size="64" font-weight="700" fill="#e5e7eb" letter-spacing="1">FLY<tspan fill="#06b6d4">FI</tspan></text>
+</svg>

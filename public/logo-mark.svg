@@ -1,0 +1,25 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#05070a"/>
+
+  <!-- wings -->
+  <ellipse cx="150" cy="270" rx="130" ry="58" fill="#e2e8f0" opacity="0.22"
+    transform="rotate(-18 150 270)"/>
+  <ellipse cx="362" cy="270" rx="130" ry="58" fill="#e2e8f0" opacity="0.22"
+    transform="rotate(18 362 270)"/>
+
+  <!-- antenna spark -->
+  <path d="M256 96 L232 168 H280 Z" fill="#06b6d4"/>
+
+  <!-- head -->
+  <circle cx="256" cy="288" r="146" fill="#1c1c22"/>
+
+  <!-- compound eyes -->
+  <circle cx="184" cy="232" r="74" fill="#c0392b"/>
+  <circle cx="328" cy="232" r="74" fill="#c0392b"/>
+  <circle cx="168" cy="211" r="21" fill="#fca5a5"/>
+  <circle cx="312" cy="211" r="21" fill="#fca5a5"/>
+
+  <!-- lower body / legs suggestion -->
+  <path d="M186 392 L146 440 M256 402 L256 452 M326 392 L366 440"
+    stroke="#1c1c22" stroke-width="14" stroke-linecap="round"/>
+</svg>
