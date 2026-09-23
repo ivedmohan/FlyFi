@@ -162,8 +162,10 @@ export default function Home() {
     <main className="min-h-screen px-4 py-8 font-mono sm:py-10">
       <div className="mx-auto max-w-6xl space-y-4">
         <header className="flex flex-col items-center justify-between gap-3 border-b border-white/5 pb-4 sm:flex-row">
-          <h1 className="font-pixel text-lg leading-none text-gray-100">
-            🪰 FLY<span className="text-accent-cyan">FI</span>
+          <h1 className="flex items-center gap-2 font-pixel text-lg leading-none text-gray-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.svg" alt="" width={28} height={28} className="rounded-md" />
+            FLY<span className="text-accent-cyan">FI</span>
           </h1>
           <div className="flex items-center gap-3">
             <Link

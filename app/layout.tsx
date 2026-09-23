@@ -6,10 +6,16 @@ export const dynamic = 'force-dynamic';
 
 const pixelFont = Press_Start_2P({ weight: '400', subsets: ['latin'], variable: '--font-pixel' });
 
+const title = 'FlyFi — Autonomous Trading Fly';
+const description =
+  'A wallet-holding fruit fly that trades AVAX/USDC on Avalanche mainnet. A real 166,700-neuron ' +
+  'Drosophila connectome proposes trades; a small Q-learning agent can veto them. Gas sponsored by SmoothSend.';
+
 export const metadata: Metadata = {
-  title: 'FlyFi — Autonomous Trading Fly',
-  description:
-    'A wallet-holding fruit fly that trades AVAX/USDC on Avalanche via a tabular Q-learning loop, sweeping profits gaslessly through SmoothSend.',
+  title,
+  description,
+  openGraph: { title, description, images: ['/og-image.png'] },
+  twitter: { card: 'summary', title, description, images: ['/og-image.png'] },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
