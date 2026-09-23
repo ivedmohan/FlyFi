@@ -1,0 +1,19 @@
+name: FlyFi tick cron
+
+on:
+  schedule:
+    # GitHub doesn't guarantee exact timing (can slip during platform load) —
+    # fine for an hourly trading tick, not something to rely on for anything
+    # timing-sensitive.
+    - cron: '0 * * * *'
+  workflow_dispatch: {} # manual "Run workflow" button, e.g. for a demo
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/tick
+        run: |
+          curl --fail-with-body -X POST \
+            -H "Authorization: Bearer ${{ secrets.FLYFI_CRON_SECRET }}" \
+            https://flyfiavax.vercel.app/api/tick
