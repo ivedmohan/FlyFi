@@ -164,7 +164,7 @@ export default function Home() {
                 } animate-pulse-slow`}
               />
               FLY-01 · {CONNECTOME_NEURON_COUNT.toLocaleString()} NEURONS ·{' '}
-              {state.dataSource.wallet === 'live' ? 'ONLINE' : 'MOCK'}
+              {state.dataSource.wallet === 'live' ? 'LIVE ON AVALANCHE MAINNET' : 'MOCK'}
             </div>
           </div>
         </header>
@@ -530,6 +530,14 @@ function DonateCard({
       <p className="mt-2 text-[10px] text-gray-600">
         {realSwapCount} real swap{realSwapCount === 1 ? '' : 's'} so far
       </p>
+      <a
+        href={`https://snowtrace.io/address/${address}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-1 text-[10px] text-accent-cyan underline decoration-accent-cyan/30 underline-offset-2 hover:text-gray-100"
+      >
+        view on Snowtrace ↗
+      </a>
     </div>
   );
 }
