@@ -14,6 +14,9 @@ jobs:
     steps:
       - name: POST /api/tick
         run: |
-          curl --fail-with-body -X POST \
-            -H "Authorization: Bearer ${{ secrets.FLYFI_CRON_SECRET }}" \
+          curl --fail-with-body --show-error --silent \
+            --retry 4 --retry-delay 5 --retry-all-errors \
+            --connect-timeout 10 --max-time 60 \
+            -X POST \
+            -H "Authorization: ${{ secrets.FLYFI_CRON_SECRET }}" \
             https://flyfiavax.vercel.app/api/tick
